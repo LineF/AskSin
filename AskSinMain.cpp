@@ -319,7 +319,7 @@ void     HM::regCnlModule(uint8_t cnl, s_mod_dlgt Delegate, uint16_t *mainList, 
 }
 
 uint32_t HM::getHMID(void) {
-	uint8_t a[3];
+	uint8_t a[4];
 	a[0] = hmId[2];
 	a[1] = hmId[1];
 	a[2] = hmId[0];
@@ -594,7 +594,7 @@ void     HM::recv_poll(void) {															// handles the receive objects
 		}
 
 		#if defined(AS_DBG)																// some debug message
-			else Serial << F("\nUNKNOWN MESSAGE, PLEASE REPORT!\n\n");
+			//else Serial << F("\nUNKNOWN MESSAGE, PLEASE REPORT!\n\n");
 		#endif
 	}
 	
@@ -766,8 +766,8 @@ void     HM::send_peer_poll(void) {
 	uint8_t lB[1];
 	getRegAddr(_pgmB(&t->cnl),_pgmB(&t->lst),pPtr++,0x01,1,lB);							// get regs for 0x01
 	//Serial << F("rB:"); pHexB(lB[0]);
-	//Serial << F("\n")
-	send_prep(send.mCnt++,(0x82|pevt.reqACK|bitRead(lB[0],0)<<4),pevt.type,(uint8_t*)&tPeer,pevt.data,pevt.len); // prepare the message
+	//Serial << F("\n");
+	send_prep(send.mCnt++,(0x82|pevt.reqACK/*|bitRead(lB[0],0)<<4*/),pevt.type,(uint8_t*)&tPeer,pevt.data,pevt.len); // prepare the message
 }
 
 void     HM::power_poll(void) {
@@ -790,7 +790,7 @@ void     HM::power_poll(void) {
 	unsigned long mills = millis();
 
 	if (mills - powr.startMillis < powr.nxtTO) return;							// no need to do anything
-	if (send.counter > 0)   return;												// send queue not empty
+	if (send.counter > 0 || pevt.act > 0)   return;												// send queue not empty
 	
 	if ((powr.mode == POWER_MODE_BURST) && (powr.state == 0)) {
 		// power mode 2, module is in sleep and next check is reached

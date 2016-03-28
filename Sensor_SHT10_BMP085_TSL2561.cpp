@@ -49,20 +49,28 @@ void SHT10_BMP085_TSL2561::config(uint8_t data, uint8_t sck, uint16_t timing, Se
 }
 
 void SHT10_BMP085_TSL2561::poll_transmit(void) {
+	uint32_t slt;
+	
 	if (tTiming) {
 		nTime = tTiming;																// there is a given timing
 	} else {
-		nTime = (calcSendSlot() * 250) - SHT10_BMP085_TSL2561_MAX_MEASURE_TIME; 		// calculate the next send slot by multiplying with 250ms to get the time in millis
+		nTime = ((slt = calcSendSlot()) * 250) + 0*50 /*- SHT10_BMP085_TSL2561_MAX_MEASURE_TIME*/; 		// calculate the next send slot by multiplying with 250ms to get the time in millis
 	}
 	startTime = millis();
 
 	hm->sendPeerWEATHER(regCnl, tTemp, tHum, tPres, tLux);								// send out the weather event
 
+	uint32_t HMID; uint8_t msgCnt;
+	HMID = hm->getHMID(); msgCnt = hm->getMsgCnt() + 1;
+	Serial << F("Slot=") << slt/4 << F(", dst=") << startTime + nTime << F(", HMID=");
+	pHex((uint8_t *)(&HMID), 4, 0); Serial << F(", cnt=") << msgCnt; pTime(); _delay_ms(10);
+
 	nAction = SHT10_BMP085_TSL2561_nACTION_MEASURE_INIT;								// next time we want to measure again
 }
 
 uint32_t SHT10_BMP085_TSL2561::calcSendSlot(void) {
-	uint32_t result = (((hm->getHMID() << 8) | hm->getMsgCnt()) * 1103515245 + 12345) >> 16;
+	uint8_t msgCnt = hm->getMsgCnt() + 1;
+	uint32_t result = (((hm->getHMID() << 8) | msgCnt) * 1103515245 + 12345) >> 16;
 	return (result & 0xFF) + SHT10_BMP085_TSL2561_MINIMAL_CYCLE_LENGTH;
 }
 
@@ -109,6 +117,7 @@ void SHT10_BMP085_TSL2561::peerMsgEvent(uint8_t type, uint8_t *data, uint8_t len
 }
 
 void SHT10_BMP085_TSL2561::poll(void) {
+/*
 	if (tsl2561IntFlag) {
 		tsl2561IntFlag = 0;
 		if (nAction == SHT10_BMP085_TSL2561_nACTION_MEASURE_L) {
@@ -129,10 +138,11 @@ void SHT10_BMP085_TSL2561::poll(void) {
 		// Setup interrupt pesistence fo rinterrupt driven light detection
 		tsl2561->setInterruptThreshold(low, heigh);
 		tsl2561->setInterruptControl(TSL2561_INTERRUPT_CONTROL_LEVEL, TSL2561_INTERRUPT_PSELECT_OUT_OF_RANGE_1);
-*/
+* /
 		// reset the interrupt line
 		//tsl2561->clearInterrupt();
 	}
+*/
 
 	unsigned long mills = millis();
 
@@ -140,7 +150,7 @@ void SHT10_BMP085_TSL2561::poll(void) {
 	if (nTime == 0 || (mills - startTime < nTime)) {								// check if it is time to jump in
 		return;
 	}
-
+/*
 	nTime = SHT10_BMP085_TSL2561_MAX_MEASURE_TIME;
 	startTime = mills;
 
@@ -178,7 +188,9 @@ void SHT10_BMP085_TSL2561::poll(void) {
 			poll_transmit();													// transmit
 		}
 #endif
-
+*/
+poll_measureTHP();
+poll_transmit();
 }
 
 #ifdef US_100
