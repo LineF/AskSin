@@ -763,11 +763,12 @@ void     HM::send_peer_poll(void) {
 	// now we need the respective list4 to know if we have to send a burst message
 	// in regLstByte there are two information. peer needs AES and burst needed
 	// AES will be ignored at the moment, but burst needed will be translated into the message flag - bit 0 in regLstByte, translated to bit 4 = burst transmission in msgFlag
-	uint8_t lB[1];
+	static uint8_t lB[1];
 	getRegAddr(_pgmB(&t->cnl),_pgmB(&t->lst),pPtr++,0x01,1,lB);							// get regs for 0x01
 	//Serial << F("rB:"); pHexB(lB[0]);
 	//Serial << F("\n");
-	send_prep(send.mCnt++,(0x82|pevt.reqACK/*|bitRead(lB[0],0)<<4*/),pevt.type,(uint8_t*)&tPeer,pevt.data,pevt.len); // prepare the message
+	//lB[0] = 0;
+	send_prep(send.mCnt++,(0x82|pevt.reqACK|bitRead(lB[0],0)<<4),pevt.type,(uint8_t*)&tPeer,pevt.data,pevt.len); // prepare the message
 }
 
 void     HM::power_poll(void) {
