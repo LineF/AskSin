@@ -17,7 +17,7 @@
 #define AS_DBG																	// activate to see asksin debug infos's
 //#define AS_DBG_Explain														// activate to see more asksin debug infos's
 
-#define USE_ADRESS_SECTION    1													// see Register.h
+#define USE_ADRESS_SECTION    0													// see Register.h
 #define RESET_MODE_SOFT       0
 
 #define LED_MODE_CONFIG       0													// led flashes only at config button actions

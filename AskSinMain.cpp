@@ -594,7 +594,7 @@ void     HM::recv_poll(void) {															// handles the receive objects
 		}
 
 		#if defined(AS_DBG)																// some debug message
-			else Serial << F("\nUNKNOWN MESSAGE, PLEASE REPORT!\n\n");
+			//else Serial << F("\nUNKNOWN MESSAGE, PLEASE REPORT!\n\n");
 		#endif
 	}
 	
@@ -790,7 +790,7 @@ void     HM::power_poll(void) {
 	unsigned long mills = millis();
 
 	if (mills - powr.startMillis < powr.nxtTO) return;							// no need to do anything
-	if (send.counter > 0)   return;												// send queue not empty
+	if (send.counter > 0 || pevt.act > 0)   return;								// send queue not empty
 	
 	if ((powr.mode == POWER_MODE_BURST) && (powr.state == 0)) {
 		// power mode 2, module is in sleep and next check is reached

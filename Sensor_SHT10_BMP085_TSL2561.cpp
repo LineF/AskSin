@@ -26,8 +26,8 @@ void SHT10_BMP085_TSL2561::config(uint8_t data, uint8_t sck, uint16_t timing, Se
 	tsl2561InitCount = 0;
 
 	sht10 = tPtr;
-	sht10->config(data,sck);													// configure the sensor
-	sht10->writeSR(LOW_RES);													// low resolution is enough
+	//sht10->config(data,sck);													// configure the sensor
+	//sht10->writeSR(LOW_RES);													// low resolution is enough
 
 	if (pPtr != NULL) {															// only if there is a valid module defined
 		bm180 = pPtr;
@@ -36,27 +36,34 @@ void SHT10_BMP085_TSL2561::config(uint8_t data, uint8_t sck, uint16_t timing, Se
 	if (lPtr != NULL) {															// only if there is a valid module defined
 		tsl2561 = lPtr;
 
-		tsl2561->begin(TSL2561_ADDR_0);
+		//tsl2561->begin(TSL2561_ADDR_0);
 
 		// Check if tsl2561 available
-		if (tsl2561->setPowerUp()) {
+		//if (tsl2561->setPowerUp()) {
 
 			// config tsl2561 interrupt pin
-			pinMode(A0, INPUT_PULLUP);													// setting the pin to input mode
-			registerInt(A0,s_dlgt(this,&SHT10_BMP085_TSL2561::tsl2561_ISR));			// setting the interrupt and port mask
-		}
+			//pinMode(A0, INPUT_PULLUP);													// setting the pin to input mode
+			//registerInt(A0,s_dlgt(this,&SHT10_BMP085_TSL2561::tsl2561_ISR));			// setting the interrupt and port mask
+		//}
 	}
 }
 
 void SHT10_BMP085_TSL2561::poll_transmit(void) {
+	uint32_t slt;
+	
 	if (tTiming) {
 		nTime = tTiming;																// there is a given timing
 	} else {
-		nTime = (calcSendSlot() * 250) - SHT10_BMP085_TSL2561_MAX_MEASURE_TIME; 		// calculate the next send slot by multiplying with 250ms to get the time in millis
+		nTime = ((slt = calcSendSlot()) * 250) - SHT10_BMP085_TSL2561_MAX_MEASURE_TIME; 		// calculate the next send slot by multiplying with 250ms to get the time in millis
 	}
 	startTime = millis();
 
 	hm->sendPeerWEATHER(regCnl, tTemp, tHum, tPres, tLux);								// send out the weather event
+
+	uint32_t HMID; uint8_t msgCnt;
+	HMID = hm->getHMID(); msgCnt = hm->getMsgCnt() ;
+	Serial << F("Slot=") << slt << F(" (") << slt/4 << F("), dst=") << startTime + nTime << F(", HMID=");
+	pHex((uint8_t *)(&HMID), 4, 0); Serial << F(", cnt=") << msgCnt; pTime(); _delay_ms(10);
 
 	nAction = SHT10_BMP085_TSL2561_nACTION_MEASURE_INIT;								// next time we want to measure again
 }
@@ -131,7 +138,7 @@ void SHT10_BMP085_TSL2561::poll(void) {
 		tsl2561->setInterruptControl(TSL2561_INTERRUPT_CONTROL_LEVEL, TSL2561_INTERRUPT_PSELECT_OUT_OF_RANGE_1);
 */
 		// reset the interrupt line
-		tsl2561->clearInterrupt();
+		//tsl2561->clearInterrupt();
 	}
 
 	unsigned long mills = millis();
@@ -211,7 +218,7 @@ void SHT10_BMP085_TSL2561::poll(void) {
 
 uint8_t SHT10_BMP085_TSL2561::poll_measureLightInit() {
 	// check if TSL2561 available
-	uint8_t initOk = tsl2561->setPowerUp();
+	uint8_t initOk = 0;//tsl2561->setPowerUp();
 
 	if (initOk) {
 		tsl2561->setInterruptControl(TSL2561_INTERRUPT_CONTROL_LEVEL, TSL2561_INTERRUPT_PSELECT_EVERY_ADC);
@@ -244,7 +251,7 @@ uint8_t SHT10_BMP085_TSL2561::poll_measureLightInit() {
 
 void SHT10_BMP085_TSL2561::poll_measureCalcLight(void) {
 	// read light data
-	tsl2561->getData(tsl2561Data0, tsl2561Data1);
+	//tsl2561->getData(tsl2561Data0, tsl2561Data1);
 
 //	Serial.print("tsl2561InitCount :"); Serial.println(tsl2561InitCount);
 //	Serial.print("data0 :"); Serial.print(tsl2561Data0); Serial.print(", data1 :"); Serial.println(tsl2561Data1);
@@ -257,7 +264,7 @@ void SHT10_BMP085_TSL2561::poll_measureCalcLight(void) {
 
 	} else {
 		double lux = 0;
-		boolean luxValid = tsl2561->getLux(tsl2561Data0, tsl2561Data1, lux);
+		boolean luxValid = 0;//tsl2561->getLux(tsl2561Data0, tsl2561Data1, lux);
 		tLux = ((luxValid) ? lux : 65535) * 100;
 
 //		Serial.print("Lux: "); Serial.println(tLux);
@@ -266,38 +273,38 @@ void SHT10_BMP085_TSL2561::poll_measureCalcLight(void) {
 		nAction = SHT10_BMP085_TSL2561_nACTION_MEASURE_THP;
 	}
 
-	tsl2561->setPowerDown();
+	//tsl2561->setPowerDown();
 }
 
 void SHT10_BMP085_TSL2561::poll_measureTHP(void) {
 	// Disable I2C
-	TWCR = 0;
+	//TWCR = 0;
 
 	uint16_t rawData;
-	uint8_t shtError = sht10->measTemp(&rawData);
+	uint8_t shtError = 0;//sht10->measTemp(&rawData);
 
 	// Measure temperature and humidity from Sensor only if no error
 	if (!shtError) {
-		float temp = sht10->calcTemp(rawData);
+		float temp = 23;//sht10->calcTemp(rawData);
 		tTemp = temp * 10;
 
-		sht10->measHumi(&rawData);
-		tHum = sht10->calcHumi(rawData, temp);
+		//sht10->measHumi(&rawData);
+		tHum = 38;//sht10->calcHumi(rawData, temp);
 		//	Serial << F("raw: ") << rawData << F("  mH: ") << tHum << (F("\n");
 	}
 
 	if (bm180 != NULL) {														// only if we have a valid module
-		bm180->begin(BMP085_ULTRAHIGHRES);	// BMP085_ULTRALOWPOWER, BMP085_STANDARD, BMP085_HIGHRES, BMP085_ULTRAHIGHRES
+		//bm180->begin(BMP085_ULTRAHIGHRES);	// BMP085_ULTRALOWPOWER, BMP085_STANDARD, BMP085_HIGHRES, BMP085_ULTRAHIGHRES
 
 		// simple barometric formula
-		tPres = (uint16_t)((bm180->readPressure() / 10) + (tAltitude / 0.85));
+		tPres = (uint16_t)((5000/*bm180->readPressure()*/ / 10) + (tAltitude / 0.85));
 		//Serial << F("tPres: ") << tPres << F("\n");
 
 		if (tPres > 300) {
 			// get temperature from bmp180 if sht10 no present
 			if (shtError) {
 				// temp from BMP180
-				tTemp = bm180->readTemperature() * 10;
+				tTemp = 240;//bm180->readTemperature() * 10;
 			}
 		} else {
 			tPres = 0;

@@ -139,7 +139,7 @@ uint8_t CC110x::sendData(uint8_t *buf, uint8_t burst) {									// send data pac
 	if (burst) {																		// BURST-bit set?
 		cmdStrobe(CC1101_STX  );														// send a burst
 		_delay_ms(359);																	// according to ELV, devices get activated every 300ms, so send burst for 360ms
-		//Serial << F("send burst\n");
+		Serial << F("send burst\n");
 	}
 	_delay_ms(1);																		// wait a short time to set TX mode
 
